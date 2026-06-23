@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#2D5016" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Épicerie" />
+  <title>Liste d'épicerie</title>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark:  #2D5016;
+      --green-mid:   #4A7C2F;
+      --green-light: #EAF3DE;
+      --cream:       #F7F5F0;
+      --ink:         #1C1C1A;
+      --muted:       #6B6B64;
+      --border:      #E0DDD6;
+      --white:       #FFFFFF;
+      --radius:      14px;
+      --shadow:      0 2px 12px rgba(0,0,0,0.08);
+
+      --cat-fl-bg: #EAF3DE; --cat-fl-fg: #27500A;
+      --cat-vi-bg: #FAECE7; --cat-vi-fg: #712B13;
+      --cat-pa-bg: #FEF3DC; --cat-pa-fg: #633806;
+      --cat-ep-bg: #FEF3DC; --cat-ep-fg: #854F0B;
+      --cat-la-bg: #E6F1FB; --cat-la-fg: #0C447C;
+      --cat-jc-bg: #E1F5EE; --cat-jc-fg: #085041;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100dvh;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--green-dark);
+      color: var(--white);
+      padding: 52px 20px 16px;
+      padding-top: calc(52px + env(safe-area-inset-top));
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .badge {
+      background: rgba(255,255,255,0.2);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Add bar ── */
+    .add-bar {
+      display: flex;
+      gap: 8px;
+      padding: 14px 16px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: calc(60px + env(safe-area-inset-top));
+      z-index: 9;
+    }
+    .add-bar input[type="text"] {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 16px;
+      background: var(--cream);
+      color: var(--ink);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .add-bar input[type="text"]:focus { border-color: var(--green-mid); }
+    .add-bar select {
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 8px;
+      font-size: 14px;
+      background: var(--cream);
+      color: var(--ink);
+      outline: none;
+      max-width: 130px;
+    }
+    .btn-add {
+      background: var(--green-mid);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+    .btn-add:active { background: var(--green-dark); }
+
+    /* ── List ── */
+    .list-body { padding: 12px 16px 100px; }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      margin: 18px 0 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 14px 14px;
+      margin-bottom: 6px;
+      box-shadow: var(--shadow);
+      transition: opacity .2s;
+    }
+    .item-row.checked { opacity: 0.45; }
+
+    .item-row input[type="checkbox"] {
+      width: 22px; height: 22px;
+      accent-color: var(--green-mid);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .item-name {
+      flex: 1;
+      font-size: 16px;
+    }
+    .item-row.checked .item-name { text-decoration: line-through; color: var(--muted); }
+
+    .btn-del {
+      background: none;
+      border: none;
+      color: #C0392B;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .btn-del:active { background: #FAECE7; }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 60px 20px;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    .empty-icon { font-size: 48px; display: block; margin-bottom: 12px; }
+
+    /* ── Footer ── */
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0; right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .total-count { font-size: 13px; color: var(--muted); }
+    .btn-clear {
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 13px;
+      color: #C0392B;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-clear:active { background: #FAECE7; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <h1>🛒 Épicerie</h1>
+    <span class="badge" id="badge">0 restant</span>
+  </div>
+</header>
+
+<div class="add-bar">
+  <input type="text" id="new-item" placeholder="Ajouter un article…" autocomplete="off" />
+  <select id="new-cat">
+    <option value="Fruits et légumes">🥦 Fruits &amp; légumes</option>
+    <option value="Viandes et substituts">🥩 Viandes</option>
+    <option value="Pain et boulangerie">🍞 Boulangerie</option>
+    <option value="Épicerie sèche">🌾 Épicerie sèche</option>
+    <option value="Produits laitiers">🧀 Produits laitiers</option>
+    <option value="Jus et congelés">🧃 Jus &amp; congelés</option>
+  </select>
+  <button class="btn-add" id="btn-add" aria-label="Ajouter">+</button>
+</div>
+
+<div class="list-body" id="list-body"></div>
+
+<footer>
+  <span class="total-count" id="total-count"></span>
+  <button class="btn-clear" id="btn-clear">🗑 Effacer les cochés</button>
+</footer>
+
+<script>
+  const STORAGE_KEY = 'epicerie-items-v1';
+  let items = [];
+
+  const CAT_ORDER = [
+    'Fruits et légumes',
+    'Viandes et substituts',
+    'Pain et boulangerie',
+    'Épicerie sèche',
+    'Produits laitiers',
+    'Jus et congelés',
+  ];
+
+  const CAT_STYLE = {
+    'Fruits et légumes':     { bg: '#EAF3DE', fg: '#27500A' },
+    'Viandes et substituts': { bg: '#FAECE7', fg: '#712B13' },
+    'Pain et boulangerie':   { bg: '#FEF3DC', fg: '#633806' },
+    'Épicerie sèche':        { bg: '#FEF3DC', fg: '#854F0B' },
+    'Produits laitiers':     { bg: '#E6F1FB', fg: '#0C447C' },
+    'Jus et congelés':       { bg: '#E1F5EE', fg: '#085041' },
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) items = JSON.parse(raw);
+    } catch(e) { items = []; }
+    render();
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }
+
+  function render() {
+    const unchecked = items.filter(i => !i.checked);
+    const checked   = items.filter(i =>  i.checked);
+    const remaining = unchecked.length;
+
+    document.getElementById('badge').textContent =
+      remaining + ' restant' + (remaining !== 1 ? 's' : '');
+    document.getElementById('total-count').textContent =
+      items.length + ' article' + (items.length !== 1 ? 's' : '') + ' au total';
+
+    const body = document.getElementById('list-body');
+
+    if (items.length === 0) {
+      body.innerHTML = `<div class="empty">
+        <span class="empty-icon">🛒</span>
+        Ta liste est vide —<br>ajoute des articles !
+      </div>`;
+      return;
+    }
+
+    let html = '';
+    CAT_ORDER.forEach(cat => {
+      const cu = unchecked.filter(i => i.cat === cat);
+      const cc = checked.filter(i =>   i.cat === cat);
+      if (!cu.length && !cc.length) return;
+      const s = CAT_STYLE[cat] || { bg: '#F1EFE8', fg: '#444441' };
+      html += `<div><span class="section-label" style="background:${s.bg};color:${s.fg};">${cat}</span></div>`;
+      [...cu, ...cc].forEach(item => {
+        html += `<div class="item-row${item.checked ? ' checked' : ''}">
+          <input type="checkbox" data-id="${item.id}" ${item.checked ? 'checked' : ''} />
+          <span class="item-name">${escHtml(item.name)}</span>
+          <button class="btn-del" data-id="${item.id}" aria-label="Supprimer">×</button>
+        </div>`;
+      });
+    });
+    body.innerHTML = html;
+
+    body.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => toggle(cb.dataset.id));
+    });
+    body.querySelectorAll('.btn-del').forEach(btn => {
+      btn.addEventListener('click', () => remove(btn.dataset.id));
+    });
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function addItem() {
+    const input = document.getElementById('new-item');
+    const name = input.value.trim();
+    if (!name) return;
+    items.push({
+      id: Date.now().toString(),
+      name,
+      cat: document.getElementById('new-cat').value,
+      checked: false,
+    });
+    save();
+    render();
+    input.value = '';
+    input.focus();
+  }
+
+  function toggle(id) {
+    const item = items.find(i => i.id === id);
+    if (item) { item.checked = !item.checked; save(); render(); }
+  }
+
+  function remove(id) {
+    items = items.filter(i => i.id !== id);
+    save(); render();
+  }
+
+  document.getElementById('btn-add').addEventListener('click', addItem);
+  document.getElementById('new-item').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addItem();
+  });
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    items = items.filter(i => !i.checked);
+    save(); render();
+  });
+
+  load();
+</script>
+</body>
+</html>
